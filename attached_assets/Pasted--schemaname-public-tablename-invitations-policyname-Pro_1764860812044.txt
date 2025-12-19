@@ -1,0 +1,92 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "invitations",
+    "policyname": "Professionals can read own invitations",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = professional_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "invitations",
+    "policyname": "Professionals can update own invitations",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = professional_id) AND (status = 'pending'::invitation_status))",
+    "with_check": "((auth.uid() = professional_id) AND (status = ANY (ARRAY['pending'::invitation_status, 'expired'::invitation_status])))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_client_relationships",
+    "policyname": "Clients can end relationships",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = client_id) AND (status = 'active'::relationship_status))",
+    "with_check": "(status = 'ended'::relationship_status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_client_relationships",
+    "policyname": "Clients can read own relationships",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = client_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_client_relationships",
+    "policyname": "Professionals can end relationships",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "((auth.uid() = professional_id) AND (status = 'active'::relationship_status))",
+    "with_check": "(status = 'ended'::relationship_status)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_client_relationships",
+    "policyname": "Professionals can read own relationships",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = professional_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_profiles",
+    "policyname": "Anyone can read professional profiles",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "true",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_profiles",
+    "policyname": "Professionals can create own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid() = user_id) AND (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'professional'::user_role))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "professional_profiles",
+    "policyname": "Professionals can update own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  }
+]

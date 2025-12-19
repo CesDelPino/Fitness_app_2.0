@@ -1,0 +1,230 @@
+📂 Project Documentation
+📄 1. Requirements Document (01_requirements.md)
+1.1 Project Overview
+Project Name: AI Macro Tracker (MVP)
+Objective: Build a mobile-first web application that allows users to track food intake via text or image using AI, automatically calculating macros based on dynamic user metrics (BMR/TDEE).
+Target Platform: Replit (Python/Flask/SQLite).
+
+1.2 User Roles
+User: The primary user who logs food, tracks weight, and views analytics. (Single-user focus for MVP).
+1.3 Functional Requirements
+F1 - User Profile & Settings:
+Store Height, Weight, Age, Gender.
+Store manual Activity Multiplier (e.g., 1.2, 1.5).
+Calculate BMR (Basal Metabolic Rate) and TDEE (Total Daily Energy Expenditure) automatically.
+F2 - Food Logging (AI):
+Input: Text description OR Image upload.
+Process: Send to OpenAI API.
+Output: Structured JSON containing Name, Calories, Macros (P/C/F), and Unit Rates (per 100g/unit).
+F3 - Review & Edit:
+User sees AI estimation.
+User can edit "Quantity/Weight".
+Critical: Macros must update instantly on the UI without a new API call (using Unit Rates).
+F4 - Data Storage:
+Store core macros as columns.
+Store "all other data" (micros, vitamins) in a raw JSON column for future proofing.
+F5 - Weigh-Ins:
+Form to input current weight.
+Trigger automatic update of User Profile weight and recalculation of BMR/TDEE.
+F6 - Analytics:
+Dashboard showing Daily Calories vs. TDEE Target.
+Chart: Weight trend over time.
+1.4 Non-Functional Requirements
+Performance: AI response time < 5 seconds.
+UI: Mobile-responsive (TailwindCSS). Large touch targets.
+Data Integrity: SQLite database with foreign key constraints.
+📄 2. Database Schema (02_database_schema.md)
+Database Engine: SQLite
+Rationale: Zero configuration, built into Python, perfect for single-user scale on Replit.
+
+2.1 Table: users
+Stores current settings for BMR calculation.
+
+Column	Type	Constraints	Description
+id	INTEGER	PK, Auto-increment	
+height_cm	INTEGER	NOT NULL	
+current_weight_kg	REAL	NOT NULL	Updated via Weigh-In
+age	INTEGER	NOT NULL	
+gender	TEXT	NOT NULL	'M' or 'F'
+activity_multiplier	REAL	NOT NULL	Default 1.2
+daily_calorie_target	INTEGER		Calculated (BMR * Multiplier)
+2.2 Table: food_logs
+Stores the actual food entries.
+
+Column	Type	Constraints	Description
+id	INTEGER	PK, Auto-increment	
+user_id	INTEGER	FK -> users.id	
+timestamp	DATETIME	Default NOW	
+food_name	TEXT	NOT NULL	
+quantity_value	REAL	NOT NULL	e.g., 200
+quantity_unit	TEXT	NOT NULL	e.g., "grams", "oz"
+calories	INTEGER	NOT NULL	Final calculated amount
+protein_g	REAL		
+carbs_g	REAL		
+fat_g	REAL		
+fiber_g	REAL		
+sugar_g	REAL		
+micronutrients_dump	TEXT		JSON Blob of all extra data
+2.3 Table: weigh_ins
+Tracks body metrics over time.
+
+Column	Type	Constraints	Description
+id	INTEGER	PK, Auto-increment	
+user_id	INTEGER	FK -> users.id	
+date	DATE	NOT NULL	
+weight_kg	REAL	NOT NULL	
+notes	TEXT		Optional text
+📄 3. API Integration Spec (03_api_integration.md)
+3.1 Provider
+Service: OpenAI API
+Model: gpt-4o (Vision capabilities required)
+
+3.2 Prompt Strategy (The "Option B" Logic)
+To allow client-side editing without re-querying, we must ask the AI for the Base Rate.
+
+System Prompt:
+
+"You are a nutritionist API. Analyze the image or text. Return a JSON object ONLY.
+Identify the food. Estimate the portion size shown.
+CRITICAL: You must provide the 'total_macros' for the portion shown, AND the 'rate_per_unit' (e.g., macros per 1g or per 1oz).
+Also include a 'micronutrients' object with every other vitamin/mineral you can estimate."
+
+Expected JSON Response:
+
+json
+{
+  "food_name": "Grilled Chicken Breast",
+  "estimated_quantity": 200,
+  "unit": "grams",
+  "total_macros": {
+    "calories": 330,
+    "protein": 62,
+    "carbs": 0,
+    "fat": 7
+  },
+  "rate_per_unit": {
+    "unit_basis": "1 gram",
+    "calories": 1.65,
+    "protein": 0.31,
+    "carbs": 0,
+    "fat": 0.035
+  },
+  "micronutrients": {
+    "iron": "1mg",
+    "magnesium": "58mg",
+    "cholesterol": "170mg"
+  }
+}
+
+3.3 Client-Side Logic
+When the user changes estimated_quantity from 200 to 250:
+New Calories = New Quantity * rate_per_unit.calories
+
+📄 4. UI/UX Design (04_ui_design.md)
+Design System: TailwindCSS (CDN version for simplicity).
+Theme: Dark Mode (Battery saver, modern).
+
+4.1 Page Layouts
+A. Home / Dashboard
+
+Top: Progress Bar (Calories Eaten / Daily Target).
+Middle: "Quick Add" Buttons (Camera Icon, Text Icon).
+Bottom: List of Today's Logs (Time | Name | Cals).
+Footer: Navigation (Home | Weigh-In | Settings).
+B. The "Review" Modal (Critical)
+
+Image Preview: Small thumbnail of what was uploaded.
+Inputs:
+Name (Editable text)
+Quantity (Number input) | Unit (Dropdown)
+Live Stats: Large display of Calories/Protein/Carbs/Fat.
+Behavior: As user types in "Quantity", these numbers update instantly via JS.
+Action: "Save Log" button.
+C. Weigh-In & Analytics
+
+Input: Large number input for Weight.
+Chart 1: Simple line chart (Chart.js) for Weight History.
+Chart 2: Bar chart for Calorie adherence (Last 7 days).
+📄 5. Technical Architecture (05_architecture.md)
+5.1 Stack
+Language: Python 3.10+
+Framework: Flask (Minimal web server).
+ORM: SQLAlchemy (Easy database interactions).
+Frontend: Jinja2 Templates + HTML + TailwindCSS + Vanilla JavaScript.
+5.2 Project Structure
+text
+/project_root
+  ├── app.py                 # Main Flask application entry point
+  ├── database.py            # DB connection and models
+  ├── ai_service.py          # OpenAI API handling logic
+  ├── static/
+  │   ├── js/
+  │   │   └── dynamic_calc.js  # The math logic for the Review Modal
+  │   └── css/
+  ├── templates/
+  │   ├── base.html          # Layout skeleton
+  │   ├── dashboard.html     # Home
+  │   ├── review.html        # The AI result editing page
+  │   └── settings.html      # Profile & BMR config
+  └── requirements.txt       # Dependencies (flask, openai, sqlalchemy)
+
+5.3 Security
+API Key: Store OPENAI_API_KEY in Replit Secrets (Environment Variables). Never in code.
+Input Validation: Sanitize all inputs before writing to SQLite to prevent injection.
+📄 6. User Workflows (06_workflows.md)
+6.1 The "Log Food" Journey
+User taps Camera Icon.
+User selects photo.
+App shows "Analyzing..." spinner.
+Review Page loads with AI data pre-filled.
+User notices the AI guessed "300g" but the scale says "250g".
+User types "250" in the quantity box.
+Calories/Macros update instantly on screen.
+User taps Save.
+Redirect to Dashboard; Progress bar updates.
+6.2 The "Weigh-In" Journey
+User taps Weigh-In tab.
+User enters "185 lbs".
+User taps Save.
+System records weight in weigh_ins.
+System updates users.current_weight.
+System recalculates BMR based on new weight.
+System updates users.daily_calorie_target.
+📄 7. Edge Cases & Business Rules (07_edge_cases.md)
+7.1 AI Failure
+Scenario: OpenAI returns an error or unreadable JSON.
+Fallback: Redirect user to a "Manual Entry" form where they type the name and calories themselves.
+7.2 Zero Quantity
+Scenario: User enters "0" quantity.
+Rule: Disable "Save" button until quantity > 0.
+7.3 Unit Mismatch
+Scenario: AI returns "grams" but user wants "ounces".
+Solution (MVP): Keep it simple. Just let user edit the number. If they switch units mentally, they can type the new number. (Add unit conversion logic in V2).
+7.4 Missing Profile
+Scenario: First time launch.
+Rule: Force redirect to Settings page to input Height/Weight/Age before allowing food logging.
+📄 8. README / Master Index (08_readme.md)
+AI Macro Tracker - Implementation Guide
+Phase 1: Setup
+
+Create new Replit (Python).
+Add OPENAI_API_KEY to Secrets.
+Install dependencies (pip install flask openai sqlalchemy).
+Phase 2: Database
+
+Create database.py.
+Define models (User, FoodLog, WeighIn).
+Run db.create_all() in Python console.
+Phase 3: Core Logic
+
+Build ai_service.py to handle image sending and JSON parsing.
+Build app.py routes for Dashboard and Settings.
+Phase 4: Frontend
+
+Create dashboard.html (View only).
+Create review.html (The complex form with JavaScript math).
+Phase 5: Testing
+
+Test with a clear food photo.
+Test editing the weight.
+Test adding a weigh-in and checking if Calorie Target changes.

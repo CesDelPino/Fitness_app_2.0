@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title> <!-- Will be updated dynamically -->
+    <style>
+        /* 
+           1. THEME CONFIGURATION 
+           These defaults will be overwritten by JS 
+        */
+        :root {
+            --primary: #ff4757; 
+            --secondary: #2f3542;
+            --bg-light: #f1f2f6;
+            --bg-white: #ffffff;
+            --text-main: #2f3542;
+            --hero-overlay: rgba(47, 53, 66, 0.8);
+            --font-heading: 'Segoe UI', sans-serif;
+            --font-body: 'Segoe UI', sans-serif;
+        }
+
+        /* Reset & Base Styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); line-height: 1.6; color: var(--text-main); }
+        h1, h2, h3 { font-family: var(--font-heading); }
+        
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        section { padding: 60px 0; }
+
+        /* Dynamic Components */
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--bg-white);
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: opacity 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover { opacity: 0.9; }
+
+        /* Navbar */
+        nav { background: var(--bg-white); padding: 20px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--secondary); }
+        .nav-links a { margin-left: 20px; text-decoration: none; color: var(--secondary); font-weight: 500; }
+
+        /* Hero */
+        .hero {
+            background-size: cover;
+            background-position: center;
+            height: 80vh;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--bg-white);
+            /* Background image set via JS */
+        }
+        .hero-content h1 { font-size: 3.5rem; margin-bottom: 20px; }
+        .hero-content p { font-size: 1.2rem; margin-bottom: 30px; max-width: 600px; margin: 0 auto 30px auto; }
+
+        /* About */
+        .about { background: var(--bg-light); }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+        .about-img { width: 100%; height: 400px; background-size: cover; background-position: center; border-radius: 10px; }
+
+        /* Services */
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 40px;}
+        .service-card { border: 1px solid #eee; padding: 30px; border-radius: 10px; text-align: center; background: var(--bg-white); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .service-card h3 { color: var(--primary); margin-bottom: 15px; }
+        .price { font-size: 1.5rem; font-weight: bold; margin: 15px 0; display: block; }
+        .features-list { list-style: none; margin-bottom: 20px; text-align: left; padding-left: 10px; }
+        .features-list li { margin-bottom: 8px; }
+
+        /* Footer */
+        footer { background: var(--secondary); color: #aaa; text-align: center; padding: 40px 0; }
+        footer h2 { color: var(--bg-white); margin-bottom: 20px; }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.5rem; }
+            .about-grid { grid-template-columns: 1fr; }
+            .nav-links { display: none; } /* Simplified for demo */
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="container">
+            <div id="nav-logo" class="logo"></div>
+            <div class="nav-links">
+                <a href="#about">About</a>
+                <a href="#services">Services</a>
+                <a href="#contact" class="btn">Book Now</a>
+            </div>
+        </div>
+    </nav>
+
+    <header id="hero-section" class="hero">
+        <div class="container hero-content">
+            <h1 id="hero-title"></h1>
+            <p id="hero-subtitle"></p>
+            <a href="#contact" id="hero-cta" class="btn"></a>
+        </div>
+    </header>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2 id="about-heading"></h2>
+            <div class="about-grid">
+                <div id="about-img" class="about-img"></div>
+                <div class="about-text">
+                    <h3 id="about-subheading"></h3>
+                    <p id="about-bio"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="services">
+        <div class="container">
+            <h2>Training Packages</h2>
+            <div id="services-container" class="services-grid">
+                <!-- Services injected via JS -->
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <h2>Ready to Start?</h2>
+            <p id="footer-text"></p>
+            <br>
+            <a href="#" id="email-link" class="btn">Email Me</a>
+            <p style="margin-top: 40px; font-size: 0.8rem;">&copy; <span id="copyright-year"></span> <span id="copyright-name"></span></p>
+        </div>
+    </footer>
+
+    <!-- 
+      2. THE ENGINE 
+      In your real app, you would fetch this JSON from your backend.
+    -->
+    <script>
+        // --- CLIENT CONFIGURATION (The "White Label" Data) ---
+        const trainerConfig = {
+            branding: {
+                businessName: "Iron Will Fitness",
+                primaryColor: "#2ecc71", // Green theme
+                secondaryColor: "#2c3e50",
+                fontHeading: "'Helvetica Neue', sans-serif",
+            },
+            content: {
+                hero: {
+                    title: "Reclaim Your Health",
+                    subtitle: "Personalized coaching for busy parents in Chicago. Get fit without sacrificing family time.",
+                    ctaText: "Start Your Transformation",
+                    backgroundImage: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80"
+                },
+                about: {
+                    heading: "Meet Coach Sarah",
+                    subHeading: "Hi, I'm Sarah.",
+                    bio: "I specialize in functional fitness and postpartum recovery. My goal is to help you feel strong and capable in your everyday life. No crash diets, just sustainable habits.",
+                    image: "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?ixlib=rb-4.0.3&auto=format&fit=crop&w=1740&q=80"
+                },
+                contact: {
+                    email: "sarah@ironwill.com",
+                    footerMessage: "Stop waiting for the 'perfect time'. The time is now."
+                }
+            },
+            services: [
+                {
+                    title: "1-on-1 Training",
+                    price: "$90 / session",
+                    features: ["Private Studio Access", "Custom Nutrition Plan", "Form Correction"]
+                },
+                {
+                    title: "Online Coaching",
+                    price: "$120 / month",
+                    features: ["Workout App Access", "Weekly Check-ins", "Macro Guidance"]
+                },
+                {
+                    title: "Partner Training",
+                    price: "$60 / person",
+                    features: ["Train with a friend", "Shared Goals", "Double the Motivation"]
+                }
+            ]
+        };
+
+        // --- RENDER LOGIC (Don't touch this part per client) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Apply Branding (CSS Variables)
+            const root = document.documentElement;
+            root.style.setProperty('--primary', trainerConfig.branding.primaryColor);
+            root.style.setProperty('--secondary', trainerConfig.branding.secondaryColor);
+            root.style.setProperty('--font-heading', trainerConfig.branding.fontHeading);
+
+            // 2. Inject Text & Images
+            document.title = trainerConfig.branding.businessName;
+            document.getElementById('nav-logo').textContent = trainerConfig.branding.businessName;
+            
+            // Hero
+            document.getElementById('hero-title').textContent = trainerConfig.content.hero.title;
+            document.getElementById('hero-subtitle').textContent = trainerConfig.content.hero.subtitle;
+            document.getElementById('hero-cta').textContent = trainerConfig.content.hero.ctaText;
+            document.getElementById('hero-section').style.backgroundImage = 
+                `linear-gradient(var(--hero-overlay), var(--hero-overlay)), url('${trainerConfig.content.hero.backgroundImage}')`;
+
+            // About
+            document.getElementById('about-heading').textContent = trainerConfig.content.about.heading;
+            document.getElementById('about-subheading').textContent = trainerConfig.content.about.subHeading;
+            document.getElementById('about-bio').textContent = trainerConfig.content.about.bio;
+            document.getElementById('about-img').style.backgroundImage = `url('${trainerConfig.content.about.image}')`;
+
+            // Services Loop
+            const servicesContainer = document.getElementById('services-container');
+            trainerConfig.services.forEach(service => {
+                const featuresHtml = service.features.map(f => `<li>✓ ${f}</li>`).join('');
+                
+                const card = document.createElement('div');
+                card.className = 'service-card';
+                card.innerHTML = `
+                    <h3>${service.title}</h3>
+                    <p>Includes:</p>
+                    <span class="price">${service.price}</span>
+                    <ul class="features-list">${featuresHtml}</ul>
+                    <a href="#contact" class="btn">Select</a>
+                `;
+                servicesContainer.appendChild(card);
+            });
+
+            // Footer
+            document.getElementById('footer-text').textContent = trainerConfig.content.contact.footerMessage;
+            document.getElementById('email-link').href = `mailto:${trainerConfig.content.contact.email}`;
+            document.getElementById('copyright-year').textContent = new Date().getFullYear();
+            document.getElementById('copyright-name').textContent = trainerConfig.branding.businessName;
+        });
+    </script>
+</body>
+</html>

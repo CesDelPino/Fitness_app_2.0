@@ -1,0 +1,73 @@
+Engineering Implementation Brief (Internal Use)
+Purpose
+Ensure backend and Supabase logic strictly enforces the above seller/client lifecycle so that:
+
+funds cannot be earned by inactive sellers,
+refunds happen predictably,
+and platform exposure to chargebacks or data loss is minimized.
+Core Data Structures (Supabase or SQL schema)
+Table	Purpose	Essential Fields
+users	Holds sellers/clients	id, role, active, deleted_at, suspended_at
+subscriptions	Links a client to a seller	seller_id, client_id, start_date, end_date, next_renewal_at, amount, status (enum: active, refund_pending, terminated_due_to_seller_exit)
+earnings	Daily accrual entries per subscription	subscription_id, date, accrued_amount, status
+payouts	Seller disbursements	seller_id, period_start, period_end, amount, status (enum: pending, settled, withheld)
+refunds	Refund events	subscription_id, client_id, amount, trigger_event (e.g. seller_cancellation), processed_at
+Key Logic & Constraints
+Seller Deactivation Process
+
+Flag seller active = false, cancellation_date = now().
+Fire a backend function that:
+Loops through all active subscriptions with seller_id = X.
+Calculates prorated refund for unused time.
+Inserts record in refunds table.
+Marks subscription as terminated_due_to_seller_exit.
+Refunds
+
+Refund transactions are handled by the payment provider API.
+After confirmation, backend marks refunds.status = 'completed'.
+Earnings Accrual
+
+Daily cron job (Supabase scheduled function or serverless job) computes:
+earned_amount = (days_elapsed / cycle_length) * amount
+
+Inserts accrual line into earnings for each active subscription.
+Prevent accrual if seller.active = false.
+Payouts
+
+Periodic job aggregates earnings where:
+seller.active = true
+no refund_pending
+settlement_window >= 14 days
+Creates payout record.
+Actual payout handled by payment processor webhooks.
+RLS Policies
+
+Sellers and clients can only view their own records.
+Only server key (trusted service) can mark refunds or payouts as completed.
+Inserts/updates disallowed if users.active = false.
+Soft Deletion
+
+Instead of deleting rows, set deleted_at = now().
+Backend logic filters out deleted_at IS NULL for active displays.
+Dispute Handling
+
+Add a webhook endpoint for chargebacks.
+On event, mark related payout or earnings as withheld.
+Testing Scenarios
+
+Seller cancels mid-cycle → check prorated refunds apply correctly.
+Client cancels during active period → no refunds issued.
+Chargeback lands after payout → verify payout withheld.
+System Roles
+Actor	Allowed Actions
+Seller	View earnings, request cancellation (triggers above flow)
+Client	View/cancel subscriptions
+System (server key)	Execute payout and refund logic
+Admin (dashboard)	Manually mark payouts/refunds as verified, override states in disputes
+Deployment Checklist
+ Implement all refund and payout logic in server‑secured environment, not client‑side.
+ Enable RLS on users, subscriptions, payouts, and refunds.
+ Store all monetary transactions and state transitions for audit (no deletions).
+ Integrate with payment gateway (Stripe Connect / equivalent) using destination charges or separate balance accounts to hold funds until settlement.
+ Maintain idempotent job design for refunds/payouts to avoid duplicates.
+ Add logging + alerts for any failed refund/payout operations.

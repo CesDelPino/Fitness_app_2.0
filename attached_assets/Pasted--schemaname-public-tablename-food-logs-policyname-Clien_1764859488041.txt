@@ -1,0 +1,212 @@
+[
+  {
+    "schemaname": "public",
+    "tablename": "food_logs",
+    "policyname": "Clients can create own food logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid() = user_id) AND (auth.uid() = logged_by_user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "food_logs",
+    "policyname": "Clients can delete own food logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "food_logs",
+    "policyname": "Clients can read own food logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "food_logs",
+    "policyname": "Clients can update own food logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "food_logs",
+    "policyname": "Nutritionists can create client food logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(has_active_relationship(auth.uid(), user_id, ARRAY['nutritionist'::text, 'coach'::text]) AND (auth.uid() = logged_by_user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "food_logs",
+    "policyname": "Nutritionists can read client food logs",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "has_active_relationship(auth.uid(), user_id, ARRAY['nutritionist'::text, 'coach'::text])",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Clients can read professional profiles",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM professional_client_relationships\n  WHERE ((professional_client_relationships.client_id = auth.uid()) AND (professional_client_relationships.professional_id = profiles.id) AND (professional_client_relationships.status = 'active'::relationship_status))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Professionals can read client profiles",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM professional_client_relationships\n  WHERE ((professional_client_relationships.professional_id = auth.uid()) AND (professional_client_relationships.client_id = profiles.id) AND (professional_client_relationships.status = 'active'::relationship_status))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Users can read own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "policyname": "Users can update own profile",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = id)",
+    "with_check": "(auth.uid() = id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "weigh_ins",
+    "policyname": "Clients can create own weigh-ins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(auth.uid() = user_id)"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "weigh_ins",
+    "policyname": "Clients can delete own weigh-ins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "weigh_ins",
+    "policyname": "Clients can read own weigh-ins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "weigh_ins",
+    "policyname": "Clients can update own weigh-ins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "weigh_ins",
+    "policyname": "Professionals can read client weigh-ins",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "has_active_relationship(auth.uid(), user_id, ARRAY['nutritionist'::text, 'trainer'::text, 'coach'::text])",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "workout_sessions",
+    "policyname": "Clients can create own workouts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "((auth.uid() = user_id) AND (auth.uid() = logged_by_user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "workout_sessions",
+    "policyname": "Clients can delete own workouts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "DELETE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "workout_sessions",
+    "policyname": "Clients can read own workouts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "workout_sessions",
+    "policyname": "Clients can update own workouts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "UPDATE",
+    "qual": "(auth.uid() = user_id)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "workout_sessions",
+    "policyname": "Trainers can create client workouts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(has_active_relationship(auth.uid(), user_id, ARRAY['trainer'::text, 'coach'::text]) AND (auth.uid() = logged_by_user_id))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "workout_sessions",
+    "policyname": "Trainers can read client workouts",
+    "permissive": "PERMISSIVE",
+    "roles": "{public}",
+    "cmd": "SELECT",
+    "qual": "has_active_relationship(auth.uid(), user_id, ARRAY['trainer'::text, 'coach'::text])",
+    "with_check": null
+  }
+]
